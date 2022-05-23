@@ -25,6 +25,7 @@ DURATION = 200 #ms
 PADDING = 20
 
 FONT = pygame.font.SysFont("consolas.ttf", 20)
+MIDFONT = pygame.font.SysFont("consolas.ttf", 24)
 TABLEFONT = pygame.font.SysFont("consolas.ttf", 25)
 BIGFONT = pygame.font.SysFont("consolas.ttf", 60)
 SMALLFONT = pygame.font.SysFont("consolas.ttf", 15)
@@ -131,6 +132,8 @@ OPTIONS = [VERBS]
 OPTIONSSTRINGS = ["Verbs"]
 OPTIONSRECTS = [pygame.Rect(opsX, opsY + (opsH + PADDING)*(x-1), opsW, opsH) for x in range(len(OPTIONS))]
 
+GENERATEWORD = pygame.USEREVENT + 1
+
 class Menu:
   class header:
     def draw():
@@ -183,8 +186,8 @@ class Menu:
       rects = [[] for _ in range(4)]
       options = VERBOPTIONS
       
-      cellH = FONT.render("portare  ", 1, BLACK).get_height() + PADDING
-      cellW = FONT.render("portare  ", 1, BLACK).get_width() + PADDING
+      cellH = MIDFONT.render("portare  ", 1, BLACK).get_height() + PADDING
+      cellW = MIDFONT.render("portare  ", 1, BLACK).get_width() + PADDING
       
       for row in options:
         for cell in row:
@@ -195,7 +198,7 @@ class Menu:
             pygame.draw.rect(WIN, LBLUE, rect)
           pygame.draw.rect(WIN, BLACK, rect, 1)
           
-          text = FONT.render(cell, 1, BLACK)
+          text = MIDFONT.render(cell, 1, BLACK)
           WIN.blit(text, (x + (cellW + 3)*indxC + PADDING/2, y + (cellH + 3)*indxR + PADDING/2))
           rects[indxR].append(rect)
       
@@ -215,7 +218,10 @@ class Words:
         initial = VERBS[p[2]][p[1]][p[0]][p[3]]
         for item in initial:
           if item == term:
-            p.append(PERSONS[initial.index(item)+1])
+            if len(p) == 5:
+              p[4] = PERSONS[initial.index(item)+1]
+            else:
+              p.append( PERSONS[initial.index(item)+1])
             if p not in potentials:
               potentials.append(p)
       return term, potentials
@@ -232,6 +238,7 @@ class Verbpage:
     self.selected = []
     self.selectedPaths = [[] for _ in range(4)]
     self.words = None
+    self.word = None
     
     self.reviewRects = []
     self.reviewing = [[] for _ in range(4)]
@@ -240,6 +247,7 @@ class Verbpage:
     self.parseRects = []
     self.parsing = [[] for _ in range(4)]
     self.parsingPaths = [[] for _ in range(4)]
+    self.parseAvailables = []
     self.parseGuess = ""
     
   def setItems(self, items, paths):
@@ -262,7 +270,7 @@ class Verbpage:
         WIN.blit(text, ((WIDTH-text.get_width())/2, HEIGHT/6))
         
       elif self.page == "review":
-        self.reviewRects = Menu.selectors.verbs(PADDING*5, PADDING*5, self.reviewing)
+        self.reviewRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.reviewing)
         if [] not in self.reviewing:
           try:
             temp = VERBS[self.reviewingPaths[2]][self.reviewingPaths[1]][self.reviewingPaths[0]][self.reviewingPaths[3]]
@@ -273,16 +281,19 @@ class Verbpage:
           Menu.table.verbs(PADDING*5, HEIGHT/2)
           
       elif self.page == "parse":
-        self.parseRects = Menu.selectors.verbs(PADDING*5, PADDING*5, self.parsing)
+        
+        text = MIDFONT.render(self.word[0], 1, BLACK)
+        WIN.blit(text, ((WIDTH-text.get_width())/2, headerY+PADDING))
+        self.parseRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.parsing)
         if [] not in self.parsing:
           try:
             temp = VERBS[self.parsingPaths[2]][self.parsingPaths[1]][self.parsingPaths[0]][self.parsingPaths[3]]
           except:
             temp = []
-          print(temp)
-          Menu.table.verbs(PADDING*5, HEIGHT/2, temp, parse = True)
+          self.parseAvailables = Menu.table.verbs(PADDING*5, HEIGHT/2, temp, returnRects = True, parse = True)
         else:
           Menu.table.verbs(PADDING*5, HEIGHT/2, parse = True)
+          self.parseAvailables = []
       
       elif self.page == "type":
         pass
@@ -291,7 +302,7 @@ class Verbpage:
         pass
         
     elif self.page == "setup":
-      self.verbRects = Menu.selectors.verbs(PADDING*5, PADDING*5, self.selected)
+      self.verbRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.selected)
 
 def drawWin(state, mouse, verbpage):
   pygame.draw.rect(WIN, WHITE, pygame.Rect(0, 0, WIDTH, HEIGHT))
@@ -417,7 +428,6 @@ def main():
                 if rect.collidepoint(mouse):
                   indxR = verbpage.parseRects.index(row)
                   indxC = row.index(rect)
-                  print(indxR, indxC, verbpage.parsing, VERBOPTIONS[indxR][indxC], verbpage.parsingPaths[indxR])
                   if [indxR, indxC] not in verbpage.parsing:
                     if VERBOPTIONS[indxR][indxC] in verbpage.selectedPaths[indxR]:
                       verbpage.parsing[indxR] = [indxR, indxC]
@@ -425,12 +435,24 @@ def main():
                   else:
                     verbpage.parsing[indxR] = []
                     verbpage.parsingPaths[indxR] = []
+                    
+            if verbpage.parseAvailables != []:
+              for available in verbpage.parseAvailables:
+                if available[0].collidepoint(mouse):
+                  if available[1] == verbpage.word[0]:
+                    print("Correct")
+                  else:
+                    print("Incorrect", available[1], verbpage.word[0])
+                  pygame.event.post(pygame.event.Event(GENERATEWORD))
             
           
       if event.type == pygame.KEYDOWN:
         
         if event.key == pygame.K_LEFT:
+          
           if state == "verbs":
+            if verbpage.words != None:
+              pygame.event.post(pygame.event.Event(GENERATEWORD))
             new = verbpage.pages.index(verbpage.page) - 1
             if new == -1:
               verbpage.page = verbpage.pages[len(verbpage.pages) - 1]
@@ -438,14 +460,23 @@ def main():
               verbpage.page = verbpage.pages[new]
               
         if event.key == pygame.K_RIGHT:
-          
           if state == "verbs":
+            if verbpage.words != None:
+              pygame.event.post(pygame.event.Event(GENERATEWORD))
             new = verbpage.pages.index(verbpage.page) + 1
             if new == len(verbpage.pages):
               verbpage.page = verbpage.pages[0]
             else:
               verbpage.page = verbpage.pages[new]
+              
+      if event.type == GENERATEWORD:
         
+        while True:
+          new = verbpage.words.generate()
+          if new != verbpage.word:
+            verbpage.word = new
+            break
+
     drawWin(state, mouse, verbpage)
 
 main()

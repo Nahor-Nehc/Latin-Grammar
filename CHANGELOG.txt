@@ -1,0 +1,13 @@
+====[v0.1]====
+- added MIDFONT
+- added GENERATEWORD event
+- changed selectors.verbs font from FONT to MIDFONT
+- fixed Words.generate
+- added self.word
+- added parseAvailables
+- changed selectors x
+- added displaying self.word
+- added parse functionality
+
+====[v.0.0]====
+- base framework
