@@ -1,3 +1,15 @@
+====[v0.1.1]====
+- added RESETMESSAGE event
+- changed selectors to display grey cells for options that are un-selectable
+- added nextrect
+- removed verbpage.parseGuess
+- added verbpage.parseGuessed
+- added score display
+- added score tracking
+- added reviewing and parsing displays grey cells for unselectables
+- added next button
+- added messages
+
 ====[v0.1]====
 - added MIDFONT
 - added GENERATEWORD event

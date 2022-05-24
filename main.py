@@ -133,6 +133,7 @@ OPTIONSSTRINGS = ["Verbs"]
 OPTIONSRECTS = [pygame.Rect(opsX, opsY + (opsH + PADDING)*(x-1), opsW, opsH) for x in range(len(OPTIONS))]
 
 GENERATEWORD = pygame.USEREVENT + 1
+RESETMESSAGE = pygame.USEREVENT + 2
 
 class Menu:
   class header:
@@ -182,7 +183,7 @@ class Menu:
         return rects
           
   class selectors:
-    def verbs(x, y, selected):
+    def verbs(x, y, selected, reviewing=[]):
       rects = [[] for _ in range(4)]
       options = VERBOPTIONS
       
@@ -193,9 +194,18 @@ class Menu:
         for cell in row:
           indxR = options.index(row)
           indxC = row.index(cell)
+          
           rect = pygame.Rect(x + (cellW + 3)*indxC, y + (cellH + 3)*indxR, cellW, cellH)
+          
+          if reviewing != []:
+            pygame.draw.rect(WIN, GREY, rect)
+            for reviews in reviewing:
+              if cell in reviews:
+                pygame.draw.rect(WIN, WHITE, rect)
+          
           if [indxR, indxC] in selected:
             pygame.draw.rect(WIN, LBLUE, rect)
+          
           pygame.draw.rect(WIN, BLACK, rect, 1)
           
           text = MIDFONT.render(cell, 1, BLACK)
@@ -234,6 +244,11 @@ class Verbpage:
     self.items = None
     self.paths = None
     
+    self.correct = 0
+    self.answered = 0
+    
+    self.nextrect = pygame.Rect(PADDING*3, HEIGHT - PADDING*6, WIDTH - PADDING*6, PADDING*4)
+    
     self.verbRects = None
     self.selected = []
     self.selectedPaths = [[] for _ in range(4)]
@@ -248,7 +263,7 @@ class Verbpage:
     self.parsing = [[] for _ in range(4)]
     self.parsingPaths = [[] for _ in range(4)]
     self.parseAvailables = []
-    self.parseGuess = ""
+    self.parseGuessed = False
     
   def setItems(self, items, paths):
     self.items = items
@@ -263,6 +278,9 @@ class Verbpage:
     Menu.header.headings(self.pages, self.page)
     #Menu.table.verbs(PADDING*2, PADDING*5, ["moneo", "mones", "monet", "monemus", "monetis", "monent"])
     
+    text = MIDFONT.render(str(self.correct)+"/"+str(self.answered), 1, BLACK)
+    WIN.blit(text, (WIDTH - text.get_width() - PADDING,headerY+PADDING))
+    
     if self.page != "setup":
       if self.items == None:
         text = BIGFONT.render("Please set up the verbs", 1, RED)
@@ -270,7 +288,7 @@ class Verbpage:
         WIN.blit(text, ((WIDTH-text.get_width())/2, HEIGHT/6))
         
       elif self.page == "review":
-        self.reviewRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.reviewing)
+        self.reviewRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.reviewing, self.selectedPaths)
         if [] not in self.reviewing:
           try:
             temp = VERBS[self.reviewingPaths[2]][self.reviewingPaths[1]][self.reviewingPaths[0]][self.reviewingPaths[3]]
@@ -284,16 +302,25 @@ class Verbpage:
         
         text = MIDFONT.render(self.word[0], 1, BLACK)
         WIN.blit(text, ((WIDTH-text.get_width())/2, headerY+PADDING))
-        self.parseRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.parsing)
+        self.parseRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.parsing, self.selectedPaths)
         if [] not in self.parsing:
           try:
             temp = VERBS[self.parsingPaths[2]][self.parsingPaths[1]][self.parsingPaths[0]][self.parsingPaths[3]]
           except:
             temp = []
-          self.parseAvailables = Menu.table.verbs(PADDING*5, HEIGHT/2, temp, returnRects = True, parse = True)
+            
+          if self.parseGuessed == False:
+            self.parseAvailables = Menu.table.verbs(PADDING*5, HEIGHT/2, temp, returnRects = True, parse = True)
+          else:
+            self.parseAvailables = Menu.table.verbs(PADDING*5, HEIGHT/2, temp, returnRects = True)
+            pygame.draw.rect(WIN, BLACK, self.nextrect, 2)
+            text = MIDFONT.render("Next", 1, BLACK)
+            WIN.blit(text, (self.nextrect.centerx-text.get_width()/2, self.nextrect.centery-text.get_height()/2))
         else:
           Menu.table.verbs(PADDING*5, HEIGHT/2, parse = True)
           self.parseAvailables = []
+          
+        
       
       elif self.page == "type":
         pass
@@ -304,13 +331,11 @@ class Verbpage:
     elif self.page == "setup":
       self.verbRects = Menu.selectors.verbs(PADDING*4, PADDING*5, self.selected)
 
-def drawWin(state, mouse, verbpage):
+def drawWin(state, mouse, verbpage, message):
   pygame.draw.rect(WIN, WHITE, pygame.Rect(0, 0, WIDTH, HEIGHT))
   if state == "menu":
-    text = BIGFONT.render("Hampton Latin", 1, BLACK)
+    text = BIGFONT.render("Latin", 1, BLACK)
     WIN.blit(text, ((WIDTH - text.get_width())/2, PADDING*5))
-    text = BIGFONT.render("Software Project", 1, BLACK)
-    WIN.blit(text, ((WIDTH - text.get_width())/2, PADDING*8))
     
     for option in range(0, len(OPTIONSRECTS)):
       
@@ -325,9 +350,20 @@ def drawWin(state, mouse, verbpage):
   if state == "verbs":
     verbpage.draw()
     
+  if message != []:
+    if message[1] + DURATION*10 > pygame.time.get_ticks():
+      text = MIDFONT.render(message[0], 1, WHITE)
+      rect = pygame.Rect((WIDTH - text.get_width())/2 - PADDING, HEIGHT/2 - text.get_height() - PADDING*3, text.get_width()+PADDING*2, text.get_height()+PADDING*2)
+      pygame.draw.rect(WIN, BLACK, rect)
+      WIN.blit(text, ((WIDTH - text.get_width())/2, HEIGHT/2 - text.get_height() - PADDING*2))
+    else:
+      pygame.event.post(pygame.event.Event(RESETMESSAGE))
+    
   pygame.display.flip()
 
 def main():
+  
+  message = []
   
   verbpage = Verbpage()
   
@@ -413,7 +449,6 @@ def main():
                 if rect.collidepoint(mouse):
                   indxR = verbpage.reviewRects.index(row)
                   indxC = row.index(rect)
-                  print(indxR, indxC, verbpage.reviewing, VERBOPTIONS[indxR][indxC])
                   if [indxR, indxC] not in verbpage.reviewing:
                     if VERBOPTIONS[indxR][indxC] in verbpage.selectedPaths[indxR]:
                       verbpage.reviewing[indxR] = [indxR, indxC]
@@ -423,29 +458,38 @@ def main():
                     verbpage.reviewingPaths[indxR] = []
                     
           elif verbpage.page == "parse":
-            for row in verbpage.parseRects:
-              for rect in row:
-                if rect.collidepoint(mouse):
-                  indxR = verbpage.parseRects.index(row)
-                  indxC = row.index(rect)
-                  if [indxR, indxC] not in verbpage.parsing:
-                    if VERBOPTIONS[indxR][indxC] in verbpage.selectedPaths[indxR]:
-                      verbpage.parsing[indxR] = [indxR, indxC]
-                      verbpage.parsingPaths[indxR] = VERBOPTIONS[indxR][indxC]
-                  else:
-                    verbpage.parsing[indxR] = []
-                    verbpage.parsingPaths[indxR] = []
+            if verbpage.parseGuessed == False:
+              for row in verbpage.parseRects:
+                for rect in row:
+                  if rect.collidepoint(mouse):
+                    indxR = verbpage.parseRects.index(row)
+                    indxC = row.index(rect)
+                    if [indxR, indxC] not in verbpage.parsing:
+                      if VERBOPTIONS[indxR][indxC] in verbpage.selectedPaths[indxR]:
+                        verbpage.parsing[indxR] = [indxR, indxC]
+                        verbpage.parsingPaths[indxR] = VERBOPTIONS[indxR][indxC]
+                    else:
+                      verbpage.parsing[indxR] = []
+                      verbpage.parsingPaths[indxR] = []
+              
+              if verbpage.parseAvailables != []:
+                for available in verbpage.parseAvailables:
+                  if available[0].collidepoint(mouse):
+                    if available[1] == verbpage.word[0]:
+                      message = ["Correct", pygame.time.get_ticks()]
+                      verbpage.correct += 1
+                    else:
+                      message = ["Incorrect. Correct answer: " + verbpage.word[0], pygame.time.get_ticks()]
                     
-            if verbpage.parseAvailables != []:
-              for available in verbpage.parseAvailables:
-                if available[0].collidepoint(mouse):
-                  if available[1] == verbpage.word[0]:
-                    print("Correct")
-                  else:
-                    print("Incorrect", available[1], verbpage.word[0])
-                  pygame.event.post(pygame.event.Event(GENERATEWORD))
-            
-          
+                    verbpage.parseGuessed = True
+                    verbpage.answered += 1
+                      
+            elif verbpage.nextrect.collidepoint(mouse):
+              pygame.event.post(pygame.event.Event(GENERATEWORD))
+              pygame.event.post(pygame.event.Event(RESETMESSAGE))
+              verbpage.parseGuessed = False
+
+
       if event.type == pygame.KEYDOWN:
         
         if event.key == pygame.K_LEFT:
@@ -476,7 +520,11 @@ def main():
           if new != verbpage.word:
             verbpage.word = new
             break
+          
+      if event.type == RESETMESSAGE:
+        
+        message = []
 
-    drawWin(state, mouse, verbpage)
+    drawWin(state, mouse, verbpage, message)
 
 main()
