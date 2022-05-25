@@ -265,6 +265,9 @@ class Verbpage:
     self.parseAvailables = []
     self.parseGuessed = False
     
+    self.typed = ""
+    self.typeGuessed = False
+    
   def setItems(self, items, paths):
     self.items = items
     self.paths = paths
@@ -319,11 +322,21 @@ class Verbpage:
         else:
           Menu.table.verbs(PADDING*5, HEIGHT/2, parse = True)
           self.parseAvailables = []
-          
-        
       
       elif self.page == "type":
-        pass
+        text = MIDFONT.render("   ".join(self.word[1][0]), 1, BLACK)
+        WIN.blit(text, ((WIDTH-text.get_width())/2, headerY+PADDING))
+        
+        text = MIDFONT.render(self.typed, 1, BLACK)
+        rect = pygame.Rect(PADDING*5, headerY + PADDING*4, WIDTH-PADDING*10, PADDING + text.get_height())
+        pygame.draw.rect(WIN, BLACK, rect, 1)
+        
+        WIN.blit(text, (rect.left + PADDING/2, (rect.centery - text.get_height()/2)))
+        
+        if self.typeGuessed == True:
+          pygame.draw.rect(WIN, BLACK, self.nextrect, 2)
+          text = MIDFONT.render("Next", 1, BLACK)
+          WIN.blit(text, (self.nextrect.centerx-text.get_width()/2, self.nextrect.centery-text.get_height()/2))
       
       elif self.page == "results":
         pass
@@ -351,7 +364,7 @@ def drawWin(state, mouse, verbpage, message):
     verbpage.draw()
     
   if message != []:
-    if message[1] + DURATION*10 > pygame.time.get_ticks():
+    if message[1] + DURATION*20 > pygame.time.get_ticks():
       text = MIDFONT.render(message[0], 1, WHITE)
       rect = pygame.Rect((WIDTH - text.get_width())/2 - PADDING, HEIGHT/2 - text.get_height() - PADDING*3, text.get_width()+PADDING*2, text.get_height()+PADDING*2)
       pygame.draw.rect(WIN, BLACK, rect)
@@ -488,9 +501,43 @@ def main():
               pygame.event.post(pygame.event.Event(GENERATEWORD))
               pygame.event.post(pygame.event.Event(RESETMESSAGE))
               verbpage.parseGuessed = False
+              
+          elif verbpage.page == "type":
+            if verbpage.typeGuessed == True:
+              if verbpage.nextrect.collidepoint(mouse):
+                pygame.event.post(pygame.event.Event(GENERATEWORD))
+                pygame.event.post(pygame.event.Event(RESETMESSAGE))
+                verbpage.parseGuessed = False
 
 
       if event.type == pygame.KEYDOWN:
+        
+        if 97 <= event.key <= 122:
+          verbpage.typed += chr(event.key)
+          
+        
+        if event.key == pygame.K_BACKSPACE:
+          if state == "verbs":
+            if verbpage.page  == "type":
+              verbpage.typed = verbpage.typed[:-1]
+              
+        if event.key == pygame.K_RETURN:
+          if state == "verbs":
+            if verbpage.page  == "type":
+              if verbpage.typeGuessed == False:
+                if verbpage.typed == verbpage.word[0]:
+                  message = ["Correct", pygame.time.get_ticks()]
+                  verbpage.correct += 1
+                else:
+                  message = ["Incorrect. Correct answer: " + verbpage.word[0], pygame.time.get_ticks()]
+                
+                verbpage.typeGuessed = True
+                verbpage.answered += 1
+              else:
+                pygame.event.post(pygame.event.Event(GENERATEWORD))
+                pygame.event.post(pygame.event.Event(RESETMESSAGE))
+                verbpage.typed = ""
+                verbpage.typeGuessed = False
         
         if event.key == pygame.K_LEFT:
           
