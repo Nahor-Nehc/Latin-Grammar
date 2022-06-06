@@ -1,3 +1,15 @@
+====[v0.2.1]====
+- added general form of verbs for future reference
+- added persons for all diff verb types
+- added subjunctive active
+- changed Menu.table.verbs to allow for diff verb persons
+- changed Words.verbs.generate to ensure self.selection != None when trying to generate words
+- added verbpage.results
+- CHANGED pygame.MOUSEBUTTONDOWN to pygame.MOUSEBUTTONUP for better user experience
+- changed when typing in "typing" mode that user can only type when verbpage.typeGuessed == False
+- added ability to handle results to "typing" with several possibilities
+- changed GENERATEWORD to ensure new words only set in verbpage if possible word is returned (i.e. not None type)
+
 ====[v0.2]====
 - ADDED TYPE
 - added verbpage.typed

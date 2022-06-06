@@ -2,6 +2,14 @@ import pygame
 import random
 import sys
 
+# {
+#   "portare" : [],
+#   "monere" : [],
+#   "trahere" : [],
+#   "audire" : [],
+#   "capere" : [],
+# }
+
 pygame.init()
 
 WIDTH, HEIGHT = 600, 700
@@ -43,6 +51,27 @@ PERSONS = {
   6 : "3rd pl",
 }
 
+IMPERS = {
+  1 : "sg",
+  2 : "pl",
+}
+
+INFPERS = {
+  1 : "infin",
+}
+
+PARTPERS = {
+  1 : "",
+}
+
+TABLEDICTS = {
+  "indic" : PERSONS,
+  "subj" : PERSONS,
+  "imper" : IMPERS,
+  "infin": INFPERS,
+  "ptcpl": PARTPERS,
+}
+
 INDICATIVE = {
   "act": {
     "pres": {
@@ -80,31 +109,88 @@ INDICATIVE = {
       "audire": ["audiveram", "audiveras", "audiverat", "audiveramus", "audiveratis", "audiverant"],
       "capere": ["ceperam", "ceperas", "ceperat", "ceperamus", "ceperatis", "ceperant"],
     },
+  },
+  "pass": {
+    
   }
 }
 
 SUBJUNCTIVE = {
-  "active": {
-    "imperfect": {
-      "portare": ["portare", "bam", "bas", "bat", "bamus", "batis", "bant"],
-      "monere": ["monere", "bam", "bas", "bat", "bamus", "batis", "bant"],
-      "trahere": ["trahere", "bam", "bas", "bat", "bamus", "batis", "bant"],
-      "audire": ["audire", "bam", "bas", "bat", "bamus", "batis", "bant"],
-      "capere": ["capere", "bam", "bas", "bat", "bamus", "batis", "bant"],
+  "act": {
+    "pres": {
+      "portare": ["portem", "portes", "portet", "portemus", "portetis", "portent"],
+      "monere": ["moneam", "moneas", "moneat", "moneamus", "moneatis", "moneant"],
+      "trahere": ["traham", "trahas", "trahat", "trahamus", "trahatis", "trahant"],
+      "audire": ["audiam", "audias", "audiat", "audiamus", "audiatis", "audiant"],
+      "capere": ["capiam", "capias", "capiat", "capiamus", "capiatis", "capiant"],
     },
-    "pluperfect": {
-      "portare": ["porta", "veram", "veras", "verat", "veramus", "veratis", "verant"],
-      "monere": ["mon", "ueram", "ueras", "uerat", "ueramus", "ueratis", "uerant"],
-      "trahere": ["tra", "xeram", "xeras", "xerat", "xeramus", "xeratis", "xerant"],
-      "audire": ["audi", "veram", "veras", "verat", "veramus", "veratis", "verant"],
-      "capere": ["cep", "eram", "eras", "erat", "eramus", "eratis", "erant"],
+    "imp" : {
+      "portare": ["portarem", "portares", "portaret", "portaremus", "portaretis", "portarent"],
+      "monere": ["monerem", "moneres", "moneret", "moneremus", "moneretis", "monerent"],
+      "trahere": ["traherem", "traheres", "traheret", "traheremus", "traheretis", "traherent"],
+      "audire" : ["audirem", "audires", "audiret", "audiremus", "audiretis", "audirent"],
+      "capere" : ["caperem", "caperes", "caperet", "caperemus", "caperetis", "caperent"],
+    },
+    "perf" : {
+      "portare": ["portaverim", "portaveris", "portaverit", "portaverimus", "portaveritis", "portaverint"],
+      "monere": ["monuerim", "monueris", "monuerit", "monuerimus", "monueritis", "monuerint"],
+      "trahere": ["traxerim", "traxeris", "traxerit", "traxerimus", "traxeritis", "traxerint"],
+      "audire" : ["audiverim", "audiveris", "audiverit", "audiverimus", "audiveritis", "audiverint"],
+      "capere" : ["ceperim", "ceperis", "ceperit", "ceperimus", "ceperitis", "ceperint"],
+    },
+    "plupf": {
+      "portare": ["portavissem", "portavisses", "portavisset", "portavissemus", "portavissetis", "portavissent"],
+      "monere": ["monuissem", "monuisses", "monuisset", "monuissemus", "monuissetis", "monuissent"],
+      "trahere": ["traxissem", "traxisses", "traxisset", "traxissemus", "traxissetis", "traxissent"],
+      "audire": ["audivissem", "audivisses", "audivisset", "audivissemus", "audivissetis", "audivissent"],
+      "capere": ["cepissem", "cepisses", "cepisset", "cepissemus", "cepissetis", "cepissent"],
+    },
+  },
+  "pass" : {
+    "pres" : {
+      "portare" : [],
+      "monere" : [],
+      "trahere" : [],
+      "audire" : [],
+      "capere" : [],
+    }
+    
+  },
+}
+
+IMPERATIVE = {
+  "act": {
+    "pres": {
+      "portare": ["porta", "portate"],
+      "monere" : ["mone", "monete"],
+      "trahere" : ["trahe", "trahite"],
+      "audire" : ["audi", "audite"],
+      "capere" : ["cape", "capite"],
+    },
+    "fut": {
+      "portare": ["portato", "portatote"],
+      "monere" : ["moneto", "monetote"],
+      "trahere" : ["trahito", "trahitote"],
+      "audire" : ["audito", "auditote"],
+      "capere" : ["capito", "capitote"],
     },
   }
+}
+
+INFINITIVE = {
+  
+}
+
+PARTICIPLE = {
+  
 }
 
 VERBS = {
   "indic": INDICATIVE,
   "subj": SUBJUNCTIVE,
+  "imper": IMPERATIVE,
+  "infin": INFINITIVE,
+  "ptcpl": PARTICIPLE,
 }
 
 opsW, opsH = WIDTH - PADDING*8,75
@@ -112,7 +198,7 @@ opsX, opsY = PADDING*4, HEIGHT/2
 headerY = PADDING*2
 
 def product(*args, repeat=1):
-  # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
+  # product("ABCD", "xy") --> Ax Ay Bx By Cx Cy Dx Dy
   # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
   pools = [tuple(pool) for pool in args] * repeat
   temp = []
@@ -156,13 +242,14 @@ class Menu:
       WIN.blit(text, ((WIDTH - PADDING - text.get_width(), (headerY-text.get_height())/2)))
   
   class table:
-    def verbs(x, y, values = [], returnRects = False, parse = False):
+    def verbs(x, y, values = [], returnRects = False, parse = False, opts = PERSONS):
+      vals = opts.values()
       text = TABLEFONT.render("---------", 1, BLACK)
       rects = []
       cellH = text.get_height()+PADDING
       cell1W = text.get_width() + PADDING
-      for row in PERSONS.values():
-        indx = list(PERSONS.values()).index(row)
+      for row in vals:
+        indx = list(vals).index(row)
         rect = pygame.Rect(x, y + (cellH-1)*(indx), cell1W, cellH)
         pygame.draw.rect(WIN, BLACK, rect, 1)
         
@@ -172,7 +259,7 @@ class Menu:
         rect2 = pygame.Rect(x + cell1W - 1, y + (cellH-1)*(indx), cell1W*4, cellH)
         pygame.draw.rect(WIN, BLACK, rect2, 1)
         
-        if len(values) == 6:
+        if len(values) == len(vals):
           text = TABLEFONT.render(values[indx], 1, BLACK)
           if parse == True:
             text = TABLEFONT.render("???", 1, RED)
@@ -221,25 +308,33 @@ class Words:
       self.paths = paths # [["pres", "fut", "imp", "perf", "plupf"], ["act", "pass"], ["indic", "subj", "imper", "infin", "ptcpl"], ["portare", "monere", "trahere", "audire", "capere"]]
       
     def generate(self):
-      rand = random.randrange(0, len(self.selection))
-      term = self.selection[rand]
-      potentials = []
-      for p in self.paths:
-        initial = VERBS[p[2]][p[1]][p[0]][p[3]]
-        for item in initial:
-          if item == term:
-            if len(p) == 5:
-              p[4] = PERSONS[initial.index(item)+1]
-            else:
-              p.append( PERSONS[initial.index(item)+1])
-            if p not in potentials:
-              potentials.append(p)
-      return term, potentials
+      if self.selection != None:
+        rand = random.randrange(0, len(self.selection))
+        term = self.selection[rand]
+        potentials = []
+        for p in self.paths:
+          try:
+            initial = VERBS[p[2]][p[1]][p[0]][p[3]]
+          except:
+            continue
+          for item in initial:
+            if item == term:
+              if len(p) == 5:
+                p[4] = PERSONS[initial.index(item)+1]
+              else:
+                p.append( PERSONS[initial.index(item)+1])
+              if p not in potentials:
+                potentials.append(p)
+        return term, potentials
+      else:
+        return None
 
 class Verbpage:
   def __init__(self):
     self.page = "setup"
     self.pages = ["setup", "review", "parse", "type", "results"]
+    
+    self.results = []
     
     self.items = None
     self.paths = None
@@ -297,7 +392,8 @@ class Verbpage:
             temp = VERBS[self.reviewingPaths[2]][self.reviewingPaths[1]][self.reviewingPaths[0]][self.reviewingPaths[3]]
           except:
             temp = []
-          Menu.table.verbs(PADDING*5, HEIGHT/2, temp)
+          
+          Menu.table.verbs(PADDING*5, HEIGHT/2, temp, opts = TABLEDICTS[self.reviewingPaths[2]])
         else:
           Menu.table.verbs(PADDING*5, HEIGHT/2)
           
@@ -410,7 +506,7 @@ def main():
         #terminates system
         sys.exit()
         
-      if event.type == pygame.MOUSEBUTTONDOWN:
+      if event.type == pygame.MOUSEBUTTONUP:
         
         if state == "menu":
           for option in range(0, len(OPTIONSRECTS)):
@@ -496,6 +592,7 @@ def main():
                     
                     verbpage.parseGuessed = True
                     verbpage.answered += 1
+                    verbpage.results.append([verbpage.word[0], available[1], verbpage.word[1]])
                       
             elif verbpage.nextrect.collidepoint(mouse):
               pygame.event.post(pygame.event.Event(GENERATEWORD))
@@ -507,14 +604,14 @@ def main():
               if verbpage.nextrect.collidepoint(mouse):
                 pygame.event.post(pygame.event.Event(GENERATEWORD))
                 pygame.event.post(pygame.event.Event(RESETMESSAGE))
-                verbpage.parseGuessed = False
+                verbpage.typeGuessed = False
 
 
       if event.type == pygame.KEYDOWN:
-        
-        if 97 <= event.key <= 122:
-          verbpage.typed += chr(event.key)
+        if verbpage.typeGuessed == False:
           
+          if 97 <= event.key <= 122:
+            verbpage.typed += chr(event.key)
         
         if event.key == pygame.K_BACKSPACE:
           if state == "verbs":
@@ -533,7 +630,15 @@ def main():
                 
                 verbpage.typeGuessed = True
                 verbpage.answered += 1
+                
+                if len(verbpage.word[1]) == 1:
+                  ops = "  ".join(verbpage.word[1][0])
+                else:
+                  ops = ":".join(["  ".join(verbpage.word[1][x] for x in range(0, len(verbpage.word[1])))])
+                  
+                verbpage.results.append([ops, verbpage.typed, verbpage.word[0]])
               else:
+                
                 pygame.event.post(pygame.event.Event(GENERATEWORD))
                 pygame.event.post(pygame.event.Event(RESETMESSAGE))
                 verbpage.typed = ""
@@ -567,11 +672,13 @@ def main():
           if new != verbpage.word:
             verbpage.word = new
             break
+          elif new == None:
+            break
           
       if event.type == RESETMESSAGE:
         
         message = []
-
+        
     drawWin(state, mouse, verbpage, message)
 
 main()
